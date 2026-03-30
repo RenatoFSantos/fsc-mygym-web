@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { Goal } from "lucide-react";
 import { authClient } from "@/app/_lib/auth-client";
-import { getWorkplansId } from "@/app/_lib/fetch-generated";
+import { getWorkplansId, getHomePageData, getCurrentUserTrainData } from "@/app/_lib/fetch-generated";
+import dayjs from "dayjs";
 import { Navbar } from "@/app/_components/navbar";
 import { EmptyState } from "@/app/_components/empty-state";
 import { WorkoutPlanDayCard } from "./_components/workout-plan-day-card";
@@ -33,7 +34,15 @@ export default async function WorkoutPlanPage({
 
   if (!session?.data?.user) redirect("/auth");
 
-  const response = await getWorkplansId(id);
+  const [homeData, trainData, response] = await Promise.all([
+    getHomePageData(dayjs().format("YYYY-MM-DD")),
+    getCurrentUserTrainData(),
+    getWorkplansId(id),
+  ]);
+
+  if (homeData.status === 404 || (trainData.status === 200 && trainData.data === null)) {
+    redirect("/onboarding");
+  }
 
   if (response.status === 404) notFound();
 

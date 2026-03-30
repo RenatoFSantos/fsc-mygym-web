@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { authClient } from "@/app/_lib/auth-client";
-import { getUserWorkoutStats } from "@/app/_lib/fetch-generated";
+import { getUserWorkoutStats, getHomePageData, getCurrentUserTrainData } from "@/app/_lib/fetch-generated";
 import { GetUserWorkoutStats200ConsistencyByDay } from "@/app/_lib/fetch-generated";
 import { Navbar } from "@/app/_components/navbar";
 import { Flame, CircleCheck, CirclePercent, Hourglass } from "lucide-react";
@@ -70,7 +70,15 @@ export default async function StatsPage() {
   const from = today.subtract(2, "month").startOf("month").format("YYYY-MM-DD");
   const to = today.format("YYYY-MM-DD");
 
-  const statsResponse = await getUserWorkoutStats({ from, to });
+  const [homeData, trainData, statsResponse] = await Promise.all([
+    getHomePageData(today.format("YYYY-MM-DD")),
+    getCurrentUserTrainData(),
+    getUserWorkoutStats({ from, to }),
+  ]);
+
+  if (homeData.status === 404 || (trainData.status === 200 && trainData.data === null)) {
+    redirect("/onboarding");
+  }
 
   if (statsResponse.status !== 200) {
     throw new Error("Failed to fetch stats");

@@ -1,12 +1,16 @@
 import Image from "next/image";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { CalendarDays, Dumbbell, Timer } from "lucide-react";
-import { getWorkoutDays } from "@/app/_lib/fetch-generated";
+import { getWorkoutDays, getHomePageData, getCurrentUserTrainData } from "@/app/_lib/fetch-generated";
+import { authClient } from "@/app/_lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/app/_components/navbar";
 import { EmptyState } from "@/app/_components/empty-state";
 import { BackButton } from "./_components/back-button";
 import { ExerciseCard } from "./_components/exercise-card";
 import { StartWorkoutButton } from "./_components/start-workout-button";
+import dayjs from "dayjs";
 
 const WEEK_DAY_LABELS: Record<string, string> = {
   MONDAY: "SEG",
@@ -25,7 +29,21 @@ export default async function WorkoutDayPage({
 }) {
   const { id: workoutPlanId, dayId: workoutDayId } = await params;
 
-  const response = await getWorkoutDays(workoutPlanId, workoutDayId);
+  const session = await authClient.getSession({
+    fetchOptions: { headers: await headers() },
+  });
+
+  if (!session?.data?.user) redirect("/auth");
+
+  const [homeData, trainData, response] = await Promise.all([
+    getHomePageData(dayjs().format("YYYY-MM-DD")),
+    getCurrentUserTrainData(),
+    getWorkoutDays(workoutPlanId, workoutDayId),
+  ]);
+
+  if (homeData.status === 404 || (trainData.status === 200 && trainData.data === null)) {
+    redirect("/onboarding");
+  }
 
   if (response.status !== 200) {
     return (

@@ -2,7 +2,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import { authClient } from "@/app/_lib/auth-client";
-import { getCurrentUserTrainData } from "@/app/_lib/fetch-generated";
+import { getCurrentUserTrainData, getHomePageData } from "@/app/_lib/fetch-generated";
+import dayjs from "dayjs";
 import { Navbar } from "@/app/_components/navbar";
 import { Scale, Ruler, BicepsFlexed, User } from "lucide-react";
 import { SignOutButton } from "./_components/sign-out-button";
@@ -14,7 +15,15 @@ export default async function PerfilPage() {
 
   if (!session?.data?.user) redirect("/auth");
 
-  const trainDataResponse = await getCurrentUserTrainData();
+  const [homeData, trainDataResponse] = await Promise.all([
+    getHomePageData(dayjs().format("YYYY-MM-DD")),
+    getCurrentUserTrainData(),
+  ]);
+
+  if (homeData.status === 404 || (trainDataResponse.status === 200 && trainDataResponse.data === null)) {
+    redirect("/onboarding");
+  }
+
   const trainData =
     trainDataResponse.status === 200 ? trainDataResponse.data : null;
 

@@ -51,9 +51,13 @@ export default async function Home() {
   
   console.log('Home Data=', homeData)
 
+  if (homeData.status === 404 || (trainData.status === 200 && trainData.data === null)) {
+    redirect("/onboarding");
+  }
+
   if (homeData.status !== 200) {
     throw new Error("Failed to fetch home data");
-  } 
+  }
 
   const { todayWorkoutDay, workoutStreak, consistencyByDay } = homeData.data;
 
