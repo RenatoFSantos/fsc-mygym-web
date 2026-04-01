@@ -11,7 +11,7 @@ const AuthPage = () => {
   const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
-    if (!isPending && session) {
+    if (!isPending && session?.user) {
       router.push("/");
     }
   }, [session, isPending, router]);
