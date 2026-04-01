@@ -32,6 +32,16 @@ const DAY_JS_TO_API = [
   "SATURDAY",
 ] as const;
 
+const WEEK_DAY_TO_INDEX: Record<string, number> = {
+  SUNDAY: 0,
+  MONDAY: 1,
+  TUESDAY: 2,
+  WEDNESDAY: 3,
+  THURSDAY: 4,
+  FRIDAY: 5,
+  SATURDAY: 6,
+};
+
 export default async function Home() {
   const session = await authClient.getSession({
     fetchOptions: {
@@ -62,11 +72,12 @@ export default async function Home() {
   const { todayWorkoutDay, workoutStreak, consistencyByDay } = homeData.data;
 
   const todayWeekDay = DAY_JS_TO_API[dayjs().day()];
+  const weekStart = today.startOf('week');
 
   return (
     <main className="flex flex-col pb-24">
       <section className="relative h-[296px] rounded-b-[20px] overflow-hidden bg-foreground">
-        {todayWorkoutDay.coverImageUrl && (
+        {todayWorkoutDay?.coverImageUrl && (
           <Image
             src={todayWorkoutDay.coverImageUrl}
             alt={todayWorkoutDay.name}
@@ -111,7 +122,8 @@ export default async function Home() {
             <div className="border border-border rounded-[12px] p-5 flex-1">
               <div className="flex justify-between">
                 {WEEK_DAYS.map((day, index) => {
-                  const dayData = consistencyByDay[day];
+                  const dayDate = weekStart.add(WEEK_DAY_TO_INDEX[day], 'day').format('YYYY-MM-DD');
+                  const dayData = consistencyByDay[dayDate];
                   const isToday = day === todayWeekDay;
                   const isCompleted = dayData?.workoutDayCompleted;
                   const isStarted = dayData?.workoutDayStarted && !isCompleted;

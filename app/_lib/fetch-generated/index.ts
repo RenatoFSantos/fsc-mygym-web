@@ -369,7 +369,7 @@ export type GetHomePageData200ConsistencyByDay = {
 
 export type GetHomePageData200 = {
   activeWorkoutPlanId: string;
-  todayWorkoutDay?: GetHomePageData200TodayWorkoutDay;
+  todayWorkoutDay: GetHomePageData200TodayWorkoutDay;
   workoutStreak: number;
   consistencyByDay: GetHomePageData200ConsistencyByDay;
 };

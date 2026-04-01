@@ -10,6 +10,7 @@ import { EmptyState } from "@/app/_components/empty-state";
 import { BackButton } from "./_components/back-button";
 import { ExerciseCard } from "./_components/exercise-card";
 import { StartWorkoutButton } from "./_components/start-workout-button";
+import { CompleteWorkoutButton } from "./_components/complete-workout-button";
 import dayjs from "dayjs";
 
 const WEEK_DAY_LABELS: Record<string, string> = {
@@ -69,7 +70,8 @@ export default async function WorkoutDayPage({
     workoutDay.estimatedDurationInSeconds / 60,
   );
 
-  const hasInProgress = sessions.some((s) => s.startedAt && !s.completedAt);
+  const inProgressSession = sessions.find((s) => s.startedAt && !s.completedAt);
+  const hasInProgress = Boolean(inProgressSession);
   const hasCompleted = sessions.some((s) => Boolean(s.completedAt));
 
   return (
@@ -94,13 +96,21 @@ export default async function WorkoutDayPage({
           )}
           <div className="absolute inset-0 bg-linear-to-b from-transparent to-black" />
           <div className="absolute inset-0 p-5 flex flex-col justify-between">
-            <div className="flex">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 bg-foreground/16 backdrop-blur-sm rounded-full px-[10px] py-[5px]">
                 <CalendarDays className="size-3.5 text-primary-foreground" />
                 <span className="text-primary-foreground text-xs font-semibold font-inter-tight uppercase">
                   {WEEK_DAY_LABELS[workoutDay.weekDay] ?? workoutDay.weekDay}
                 </span>
               </div>
+              {!hasInProgress && !hasCompleted && (
+                <StartWorkoutButton
+                  workoutPlanId={workoutPlanId}
+                  workoutDayId={workoutDayId}
+                  className="rounded-full font-inter-tight text-xs h-8 px-4"
+                  size="sm"
+                />
+              )}
             </div>
             <div className="flex flex-col gap-1">
               <h1 className="text-primary-foreground text-2xl font-semibold font-inter-tight">
@@ -134,13 +144,12 @@ export default async function WorkoutDayPage({
           )}
         </div>
 
-        {hasInProgress ? (
-          <Button
-            variant="outline"
-            className="w-full rounded-full font-inter-tight"
-          >
-            Marcar como concluído
-          </Button>
+        {hasInProgress && inProgressSession ? (
+          <CompleteWorkoutButton
+            workoutPlanId={workoutPlanId}
+            workoutDayId={workoutDayId}
+            sessionId={inProgressSession.id}
+          />
         ) : hasCompleted ? (
           <Button
             variant="ghost"
